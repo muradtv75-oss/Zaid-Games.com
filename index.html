@@ -14,14 +14,18 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Zaid Games V5"/>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Fredoka+One&display=swap" rel="stylesheet"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Fredoka+One&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&family=Fredoka+One&display=swap" rel="stylesheet"/></noscript>
 <style>
 :root{--pri:#6C63FF;--sec:#FF6584;--acc:#FFD93D;--suc:#6BCB77;--inf:#4FC3F7;--bg:#0f0e17;--card:#1a1933;--txt:#fffffe;--mut:#a7a9be;--gold:#FFD700;--prem:linear-gradient(135deg,#FFD700,#FFA000);}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);min-height:100vh;font-family:'Tajawal','Fredoka One',Arial,sans-serif;overflow-x:hidden;color:var(--txt);-webkit-tap-highlight-color:transparent;}
 #app{min-height:100vh;display:flex;flex-direction:column;}
-.splash{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#6C63FF 0%,#FF6584 50%,#FFD93D 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s;}
+.splash{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#6C63FF 0%,#FF6584 50%,#FFD93D 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s;animation:splashAutoHide 4s forwards;}
 .splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+@keyframes splashAutoHide{0%,70%{opacity:1;visibility:visible;}100%{opacity:0;visibility:hidden;pointer-events:none;}}
 .splash h1{font-family:'Fredoka One',cursive;font-size:2.8rem;color:white;text-shadow:3px 3px 6px rgba(0,0,0,.3);}
 .splash p{color:rgba(255,255,255,.9);font-size:1.1rem;margin-top:8px;}
 .splash .loader{width:55px;height:55px;border:5px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;margin-top:25px;}
@@ -834,19 +838,20 @@ setInterval(()=>{if(Math.random()<0.3)showNotif();},60000);
 let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('pwaInstall').style.display='flex';});
 function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;document.getElementById('pwaInstall').style.display='none';});}}
-// Inline service worker
-if('serviceWorker'in navigator){const swCode='self.addEventListener("install",e=>{self.skipWaiting();});self.addEventListener("activate",e=>{self.clients.claim();});self.addEventListener("fetch",e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});';const blob=new Blob([swCode],{type:'application/javascript'});navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});}
+// Service worker removed - blob URLs not supported by most browsers
 
 // ===== INIT =====
 function init(){
+  // Hide splash IMMEDIATELY first
+  try{document.getElementById('splash').classList.add('hide');}catch(e){}
   try{checkPremium();}catch(e){console.log('Premium check error:',e);}
   try{updateStars();}catch(e){console.log('Stars error:',e);}
   try{initParticles();}catch(e){console.log('Particles error:',e);}
   try{const savedLang=localStorage.getItem('zaid_lang');if(savedLang&&savedLang!=='ar')setLang(savedLang);}catch(e){}
   try{renderGames();}catch(e){console.log('Render games error:',e);}
   try{updatePrayerUI();}catch(e){console.log('Prayer UI error:',e);}
-  // Always hide splash after max 2.5 seconds
-  setTimeout(()=>{try{document.getElementById('splash').classList.add('hide');}catch(e){}},2500);
+  // Fallback splash hide
+  setTimeout(()=>{try{document.getElementById('splash').classList.add('hide');}catch(e){}},1500);
   setTimeout(()=>{try{showNotif();}catch(e){}},8000);
   // Canvas resize
   function resizeCanvas(){try{const wrap=document.querySelector('.game-canvas-wrap');if(wrap){const maxW=Math.min(360,window.innerWidth-32);const scale=maxW/360;canvas.style.width=maxW+'px';canvas.style.height=(480*scale)+'px';}}catch(e){}}
